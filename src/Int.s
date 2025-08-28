@@ -4,16 +4,27 @@ extern printStr
 extern printf
 extern keyboardDriver
 extern inputStr
-extern queuePush
-extern queuePop
 extern TSS
-extern taskQueue
-extern exitQueue
-extern shellQueue
-extern deallocateTaskCR3
+extern curTask
+extern getNextTask
+extern taskExit
 
-global intList
+global __intList
 global __picInit
+global __taskSwitch
+
+%macro intTmpl 1
+
+int%1:
+
+    push %1
+    push __fmtStr
+    call printf
+    add esp, 8
+
+    hlt
+
+%endmacro
 
 __picInit:
 
@@ -45,19 +56,6 @@ __picInit:
     pop eax
 
     ret
-
-%macro intTmpl 1
-
-int%1:
-
-    push %1
-    push __fmtStr
-    call printf
-    add esp, 8
-
-    hlt
-
-%endmacro
 
 intTmpl 0x00
 intTmpl 0x01
@@ -120,19 +118,12 @@ intTimer:
     out 0x20, al
     out 0xa0, al
 
-    mov eax, esp
-    and eax, 0xfffff000
-
+    mov eax, [curTask]
     mov [eax + 12], esp
 
-    push eax
-    push dword [eax + 16]
-    call queuePush
-    add esp, 8
+__taskSwitch:
 
-    push taskQueue
-    call queuePop
-    add esp, 4
+    call getNextTask
 
     mov ebx, [eax + 8]
     mov cr3, ebx
@@ -154,12 +145,11 @@ intKeyboard:
 
     push eax
 
-    xor eax, eax
-
     mov al, 0x20
     out 0x20, al
     out 0xa0, al
 
+    xor eax, eax
     in al, 0x60
     push eax
     call keyboardDriver
@@ -174,49 +164,12 @@ intSyscall:
     push edx
     push ecx
     push ebx
-    call [syscallList + eax * 4]
+    call [__syscallList + eax * 4]
     add esp, 12
 
     iret
 
-taskExit:
-
-    call deallocateTaskCR3
-
-    mov eax, esp
-    and eax, 0xfffff000
-
-    push eax
-    push exitQueue
-    call queuePush
-    add esp, 8
-
-    push shellQueue
-    call queuePop
-    add esp, 4
-
-    mov dword [eax + 16], taskQueue
-
-    mov ebx, [eax + 8]
-    mov cr3, ebx
-
-    mov esp, [eax + 12]
-
-    add eax, 0x1000
-    mov [TSS + 4], eax
-
-    popa
-    pop gs
-    pop fs
-    pop es
-    pop ds
-
-    iret
-
-__fmtStr:
-    db `Int: %d\n`, 0
-
-intList:
+__intList:
     dd int0x00
     dd int0x01
     dd int0x02
@@ -267,7 +220,10 @@ intList:
     dd int0x2f
     dd intSyscall
 
-syscallList:
+__syscallList:
     dd printStr
     dd inputStr
     dd taskExit
+
+__fmtStr:
+    db `Int: %d\n`, 0

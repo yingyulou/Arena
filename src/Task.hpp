@@ -5,13 +5,12 @@
 #include "Queue.h"
 #include "Memory.h"
 #include "HD.h"
+#include "Shell.h"
 #include "Util.h"
 
 uint8_t TSS[104];
-
 Queue taskQueue;
-Queue exitQueue;
-Queue shellQueue;
+TCB *curTask = 0;
 
 uint64_t __makeTSSDescriptor(uint64_t tssBase, uint64_t tssLimit, uint64_t tssAttr)
 {
@@ -41,30 +40,19 @@ void __installKernelTask()
     TCB *tcbPtr = (TCB *)0xc009f000;
 
     tcbPtr->CR3       = 0x100000;
-    tcbPtr->taskQueue = &taskQueue;
-
+    tcbPtr->taskState = TASK_READY;
     bitmapInit(&tcbPtr->vMemoryBitmap, (uint8_t *)0xc009d000, 0x8000, true);
+
+    curTask = tcbPtr;
 }
 
 
 void taskInit()
 {
     queueInit(&taskQueue);
-    queueInit(&exitQueue);
-    queueInit(&shellQueue);
 
     __installTSS();
     __installKernelTask();
-}
-
-
-TCB *getTCB()
-{
-    uint32_t ESP0;
-
-    __asm__ __volatile__("mov %%esp, %0": "=g"(ESP0));
-
-    return (TCB *)(ESP0 & 0xfffff000);
 }
 
 
@@ -72,17 +60,13 @@ uint32_t __getEFLAGS()
 {
     uint32_t EFLAGS;
 
-    __asm__ __volatile__(
-        "pushf\n\t"
-        "pop %0\n\t"
-        : "=g"(EFLAGS)
-    );
+    __asm__ __volatile__("pushf; pop %0": "=g"(EFLAGS));
 
     return EFLAGS;
 }
 
 
-void loadTaskPL0(uint32_t EIP)
+TCB *loadTaskPL0(uint32_t EIP)
 {
     uint8_t *taskMemoryPtr = (uint8_t *)allocateKernelPage(3);
 
@@ -92,15 +76,14 @@ void loadTaskPL0(uint32_t EIP)
     uint8_t *vMemoryBitmap = taskMemoryPtr + 0x2000;
 
     tcbPtr->CR3       = pCR3;
-    tcbPtr->taskQueue = &taskQueue;
+    tcbPtr->taskState = TASK_READY;
 
     memset((void *)vCR3, 0, 0x1000);
     memcpy((void *)(vCR3 + 0xc00), (void *)0xfffffc00, 255 * 4);
 
     ((uint32_t *)vCR3)[1023] = pCR3 | 0x3;
 
-    tcbPtr->ESP0 = (uint32_t)tcbPtr + 0x1000 - 15 * 4;
-
+    tcbPtr->ESP0   = (uint32_t)tcbPtr + 0x1000 - 15 * 4;
     uint32_t *ESP0 = (uint32_t *)tcbPtr->ESP0;
 
     ESP0[0]  = 0;
@@ -122,6 +105,8 @@ void loadTaskPL0(uint32_t EIP)
     bitmapInit(&tcbPtr->vMemoryBitmap, vMemoryBitmap, 0x8000, true);
 
     queuePush(&taskQueue, (Node *)tcbPtr);
+
+    return tcbPtr;
 }
 
 
@@ -135,7 +120,7 @@ void loadTaskPL3(uint32_t startSector, uint32_t sectorCount)
     uint8_t *vMemoryBitmap = taskMemoryPtr + 0x2000;
 
     tcbPtr->CR3       = pCR3;
-    tcbPtr->taskQueue = &taskQueue;
+    tcbPtr->taskState = TASK_READY;
 
     memset((void *)vCR3, 0, 0x1000);
     memcpy((void *)(vCR3 + 0xc00), (void *)0xfffffc00, 255 * 4);
@@ -160,7 +145,7 @@ void loadTaskPL3(uint32_t startSector, uint32_t sectorCount)
         : "r"(pCR3)
     );
 
-    for (int _ = 0; _ < segCount; _++, segPtr += segSize)
+    for (uint32_t _ = 0; _ < segCount; _++, segPtr += segSize)
     {
         if (*(uint32_t *)segPtr == 1)
         {
@@ -180,8 +165,7 @@ void loadTaskPL3(uint32_t startSector, uint32_t sectorCount)
 
     deallocateKernelPage(elfBuf, pageCount);
 
-    tcbPtr->ESP0 = (uint32_t)tcbPtr + 0x1000 - 17 * 4;
-
+    tcbPtr->ESP0   = (uint32_t)tcbPtr + 0x1000 - 17 * 4;
     uint32_t *ESP0 = (uint32_t *)tcbPtr->ESP0;
 
     ESP0[0]  = 0;
@@ -204,26 +188,52 @@ void loadTaskPL3(uint32_t startSector, uint32_t sectorCount)
 
     installTaskPage(0xc0000000 - 0x1000, 1);
 
-    __asm__ __volatile__(
-        "mov %0, %%cr3\n\t"
-        :
-        : "r"(curCR3)
-    );
+    __asm__ __volatile__("mov %0, %%cr3":: "r"(curCR3));
 
     bitmapInit(&tcbPtr->vMemoryBitmap, vMemoryBitmap, 0x8000, true);
 
     queuePush(&taskQueue, (Node *)tcbPtr);
-
-    getTCB()->taskQueue = &shellQueue;
-
-    __asm__ __volatile__("int $0x20");
 }
 
 
-void deleteTask()
+TCB *getNextTask()
 {
-    while (!queueEmpty(&exitQueue))
+    queuePush(&taskQueue, (Node *)curTask);
+
+    for (;;)
     {
-        deallocateKernelPage(queuePop(&exitQueue), 3);
+        TCB *tcbPtr = (TCB *)queuePop(&taskQueue);
+
+        switch (tcbPtr->taskState)
+        {
+            case TASK_READY:
+                curTask = tcbPtr;
+                return tcbPtr;
+                break;
+
+            case TASK_EXIT:
+                deallocateKernelPage(tcbPtr, 3);
+                break;
+
+            case TASK_BLOCK:
+                queuePush(&taskQueue, (Node *)tcbPtr);
+                break;
+
+            default:
+                printf("Invalid task state\n");
+                __asm__ __volatile__("cli; hlt");
+                break;
+        }
     }
+}
+
+
+void taskExit()
+{
+    deallocateTaskCR3();
+
+    curTask->taskState   = TASK_EXIT;
+    shellTask->taskState = TASK_READY;
+
+    __asm__ __volatile__("jmp __taskSwitch");
 }

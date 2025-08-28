@@ -1,11 +1,11 @@
 #pragma once
 
 #include "Keyboard.h"
-#include "IOQueue.h"
+#include "Buffer.h"
 #include "Print.h"
 #include "Util.h"
 
-IOQueue __keyboardIOQueue;
+Buffer __keyboardBuffer;
 
 const char __KEYBOARD_MAP_LIST[][2] =
 {
@@ -22,7 +22,7 @@ bool __capsLockBool = false;
 
 void keyboardInit()
 {
-    ioqueueInit(&__keyboardIOQueue);
+    bufferInit(&__keyboardBuffer);
 }
 
 
@@ -45,7 +45,7 @@ void keyboardDriver(uint32_t scanCode)
 
         if (asciiChar)
         {
-            ioqueuePush(&__keyboardIOQueue, asciiChar);
+            bufferPush(&__keyboardBuffer, asciiChar);
         }
     }
 }
@@ -53,9 +53,9 @@ void keyboardDriver(uint32_t scanCode)
 
 void inputStr(char *resStr, uint32_t strLen)
 {
-    for (int idx = 0; idx < strLen - 1;)
+    for (uint32_t idx = 0; idx < strLen - 1; )
     {
-        char curChar = ioqueuePop(&__keyboardIOQueue);
+        char curChar = bufferPop(&__keyboardBuffer);
 
         resStr[idx] = curChar;
 

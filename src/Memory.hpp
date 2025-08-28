@@ -13,28 +13,6 @@ void memoryInit()
 }
 
 
-void memcpy(void *tarPtr, const void *srcPtr, uint32_t memSize)
-{
-    __asm__ __volatile__(
-        "rep movsb\n\t"
-        :
-        : "D"(tarPtr), "S"(srcPtr), "c"(memSize)
-        : "memory"
-    );
-}
-
-
-void memset(void *tarPtr, uint8_t setVal, uint32_t memSize)
-{
-    __asm__ __volatile__(
-        "rep stosb\n\t"
-        :
-        : "D"(tarPtr), "a"(setVal), "c"(memSize)
-        : "memory"
-    );
-}
-
-
 uint32_t __allocateAddr(Bitmap *memoryBitmapPtr, uint32_t startAddr, uint32_t pageCount)
 {
     return startAddr + (bitmapAllocate(memoryBitmapPtr, pageCount) << 12);
@@ -63,7 +41,7 @@ uint32_t __allocatePage(Bitmap *vMemoryBitmapPtr, Bitmap *pMemoryBitmapPtr, uint
 {
     uint32_t vAddr = __allocateAddr(vMemoryBitmapPtr, vStartAddr, pageCount);
 
-    for (int idx = 0; idx < pageCount; idx++)
+    for (uint32_t idx = 0; idx < pageCount; idx++)
     {
         uint32_t pAddr = __allocateAddr(pMemoryBitmapPtr, pStartAddr, 1);
 
@@ -82,17 +60,17 @@ void *allocateKernelPage(uint32_t pageCount)
 
 void installTaskPage(uint32_t vAddr, uint32_t pageCount)
 {
-    Bitmap *vMemoryBitmapPtr = &getTCB()->vMemoryBitmap;
+    Bitmap *vMemoryBitmapPtr = &curTask->vMemoryBitmap;
 
     if (vAddr / 0x1000 + pageCount <= vMemoryBitmapPtr->__size)
     {
-        for (int idx = 0; idx < pageCount; idx++)
+        for (uint32_t idx = 0; idx < pageCount; idx++)
         {
             bitmapSet(vMemoryBitmapPtr, vAddr / 0x1000 + idx, 1);
         }
     }
 
-    for (int idx = 0; idx < pageCount; idx++)
+    for (uint32_t idx = 0; idx < pageCount; idx++)
     {
         uint32_t pAddr = __allocateAddr(&__pMemoryBitmap, 0x200000, 1);
 
@@ -120,7 +98,7 @@ void __deallocatePage(uint32_t vAddr, Bitmap *vMemoryBitmapPtr, Bitmap *pMemoryB
 {
     __deallocateAddr(vAddr, vMemoryBitmapPtr, vStartAddr, pageCount);
 
-    for (int idx = 0, curAddr = vAddr; idx < pageCount; idx++, curAddr += 0x1000)
+    for (uint32_t idx = 0, curAddr = vAddr; idx < pageCount; idx++, curAddr += 0x1000)
     {
         uint32_t pAddr = (*(uint32_t *)(0xffc00000 | (curAddr >> 12 << 2))) & 0xfffff000;
 
@@ -138,13 +116,13 @@ void deallocateKernelPage(void *vAddr, uint32_t pageCount)
 
 void deallocateTaskCR3()
 {
-    for (int i = 0; i < 768; i++)
+    for (uint32_t i = 0; i < 768; i++)
     {
         uint32_t *pdePtr = (uint32_t *)(0xfffff000 | (i << 2));
 
         if (*pdePtr & 0x1)
         {
-            for (int j = 0; j < 1024; j++)
+            for (uint32_t j = 0; j < 1024; j++)
             {
                 uint32_t *ptePtr = (uint32_t *)(0xffc00000 | (i << 12) | (j << 2));
 

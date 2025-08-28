@@ -37,11 +37,11 @@ void bitmapSet(Bitmap *this, uint32_t idx, bool val)
 
 uint32_t bitmapAllocate(Bitmap *this, uint32_t bitCount)
 {
-    for (int i = 0;; i++)
+    for (uint32_t i = 0;; i++)
     {
         bool allocateBool = true;
 
-        for (int j = i; j < i + bitCount; j++)
+        for (uint32_t j = i; j < i + bitCount; j++)
         {
             if (bitmapGet(this, j))
             {
@@ -52,7 +52,7 @@ uint32_t bitmapAllocate(Bitmap *this, uint32_t bitCount)
 
         if (allocateBool)
         {
-            for (int j = i; j < i + bitCount; j++)
+            for (uint32_t j = i; j < i + bitCount; j++)
             {
                 bitmapSet(this, j, 1);
             }
@@ -65,7 +65,7 @@ uint32_t bitmapAllocate(Bitmap *this, uint32_t bitCount)
 
 void bitmapDeallocate(Bitmap *this, uint32_t startIdx, uint32_t bitCount)
 {
-    for (int _ = 0; _ < bitCount; _++)
+    for (uint32_t _ = 0; _ < bitCount; _++)
     {
         bitmapSet(this, startIdx++, 0);
     }

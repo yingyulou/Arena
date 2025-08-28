@@ -1,53 +1,51 @@
 #pragma once
 
-#include "IOQueue.h"
-#include "Queue.h"
+#include "Buffer.h"
 #include "Task.h"
 #include "Util.h"
 
-void ioqueueInit(IOQueue *this)
+void bufferInit(Buffer *this)
 {
     this->__leftIdx  = 0;
     this->__rightIdx = 0;
-
-    queueInit(&this->__waitQueue);
+    this->__waitTask = 0;
 }
 
 
-bool ioqueueEmpty(IOQueue *this)
+bool bufferEmpty(Buffer *this)
 {
     return this->__leftIdx == this->__rightIdx;
 }
 
 
-bool ioqueueFull(IOQueue *this)
+bool bufferFull(Buffer *this)
 {
     return ((this->__rightIdx + 1) & 0xf) == this->__leftIdx;
 }
 
 
-void ioqueuePush(IOQueue *this, char pushChar)
+void bufferPush(Buffer *this, char pushChar)
 {
-    if (!ioqueueFull(this))
+    if (!bufferFull(this))
     {
         this->__bufList[this->__rightIdx] = pushChar;
         this->__rightIdx = (this->__rightIdx + 1) & 0xf;
     }
 
-    if (!queueEmpty(&this->__waitQueue))
+    if (this->__waitTask)
     {
-        TCB *tcbPtr = (TCB *)queuePop(&this->__waitQueue);
-        tcbPtr->taskQueue = &taskQueue;
-        queuePush(&taskQueue, (Node *)tcbPtr);
+        this->__waitTask->taskState = TASK_READY;
+        this->__waitTask = 0;
     }
 }
 
 
-char ioqueuePop(IOQueue *this)
+char bufferPop(Buffer *this)
 {
-    while (ioqueueEmpty(this))
+    while (bufferEmpty(this))
     {
-        getTCB()->taskQueue = &this->__waitQueue;
+        curTask->taskState = TASK_BLOCK;
+        this->__waitTask = curTask;
 
         __asm__ __volatile__("int $0x20");
     }

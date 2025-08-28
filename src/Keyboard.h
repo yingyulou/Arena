@@ -1,6 +1,6 @@
 #pragma once
 
-#include "IOQueue.h"
+#include "Buffer.h"
 #include "Util.h"
 
 void keyboardInit();
