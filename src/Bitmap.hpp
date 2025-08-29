@@ -1,24 +1,18 @@
 #pragma once
 
 #include "Bitmap.h"
-#include "Memory.h"
 #include "Util.h"
 
-void bitmapInit(Bitmap *this, uint8_t *data, uint32_t size, bool zeroBool)
+void bitmapInit(Bitmap *this, uint8_t *data, uint32_t size)
 {
     this->__data = data;
     this->__size = size;
-
-    if (zeroBool)
-    {
-        memset(data, 0, size >> 3);
-    }
 }
 
 
 bool bitmapGet(Bitmap *this, uint32_t idx)
 {
-    return (this->__data[idx >> 3] >> (idx & 7)) & 1;
+    return (this->__data[idx >> 3] >> (idx & 0x7)) & 0x1;
 }
 
 
@@ -26,11 +20,11 @@ void bitmapSet(Bitmap *this, uint32_t idx, bool val)
 {
     if (val)
     {
-        this->__data[idx >> 3] |= 1 << (idx & 7);
+        this->__data[idx >> 3] |= 0x1 << (idx & 0x7);
     }
     else
     {
-        this->__data[idx >> 3] &= ~(1 << (idx & 7));
+        this->__data[idx >> 3] &= ~(0x1 << (idx & 0x7));
     }
 }
 

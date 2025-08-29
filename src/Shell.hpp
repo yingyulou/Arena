@@ -28,15 +28,16 @@ void __parseCmd(char *cmdStr)
     else if (cmdStr[0] == 'd' && cmdStr[1] == ' ')
     {
         cmdStr += 2;
+
         fsDelete(getNextStr(&cmdStr));
     }
     else if (cmdStr[0] == 'r' && cmdStr[1] == ' ')
     {
         cmdStr += 2;
+
         fsLoad(getNextStr(&cmdStr));
 
-        shellTask->taskState = TASK_BLOCK;
-
+        shellTask->__taskState = TASK_BLOCK;
         __asm__ __volatile__("int $0x20");
     }
     else
@@ -61,5 +62,5 @@ void shellMain()
 
 void shellInit()
 {
-    shellTask = loadTaskPL0((uint32_t)shellMain);
+    shellTask = loadTaskPL0(shellMain);
 }

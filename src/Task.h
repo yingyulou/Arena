@@ -10,20 +10,19 @@
 
 typedef struct
 {
-    Node tcbNode;
-    uint32_t CR3;
-    uint32_t ESP0;
-    uint32_t taskState;
-    Bitmap vMemoryBitmap;
+    Node _;
+    uint32_t __CR3;
+    uint32_t __ESP0;
+    uint32_t __taskState;
+    Bitmap __vBitmap;
 } TCB;
 
 
 extern uint8_t TSS[];
-extern Queue taskQueue;
 extern TCB *curTask;
 
 void taskInit();
-TCB *loadTaskPL0(uint32_t EIP);
-void loadTaskPL3(uint32_t startSector, uint32_t sectorCount);
+TCB *loadTaskPL0(void *EIP);
+void loadTaskPL3(uint32_t startSector, uint8_t sectorCount);
 TCB *getNextTask();
 void taskExit();

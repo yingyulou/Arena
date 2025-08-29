@@ -47,11 +47,11 @@ bool strcmp(const char *lhs, const char *rhs)
 }
 
 
-void strcpy(char *tarStr, const char *srcStr, uint32_t strLen)
+void strcpy(char *tarStr, const char *srcStr, uint32_t strSize)
 {
     uint32_t idx = 0;
 
-    for (; idx < strLen - 1; idx++)
+    for (; idx < strSize - 1; idx++)
     {
         if (srcStr[idx])
         {

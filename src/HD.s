@@ -43,7 +43,7 @@ hdRead:
     jne .__waitHD
 
     mov dx, 0x1f0
-    mov ecx, [ebp + 16]
+    movzx ecx, byte [ebp + 16]
     shl ecx, 8
     mov edi, [ebp + 8]
     rep insw
@@ -93,7 +93,7 @@ hdWrite:
     jne .__waitHD
 
     mov dx, 0x1f0
-    mov ecx, [ebp + 16]
+    movzx ecx, byte [ebp + 16]
     shl ecx, 8
     mov esi, [ebp + 8]
     rep outsw

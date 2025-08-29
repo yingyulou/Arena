@@ -44,7 +44,7 @@ void printChar(char tarChar)
 
         case '\n':
         case '\r':
-            __cursorNum = (__cursorNum / 80 + 1) * 80;
+            __cursorNum = (__cursorNum + 80) / 80 * 80;
             break;
 
         default:
@@ -82,7 +82,7 @@ void printInt(uint32_t tarNum)
     }
     else
     {
-        char numStr[10] = {};
+        char numStr[0x10] = {};
         int32_t idx = 0;
 
         for (; tarNum; tarNum /= 10, idx++)

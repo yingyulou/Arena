@@ -1,4 +1,4 @@
-section mbr vstart=0x7c00
+section Mbr vstart=0x7c00
 
     lgdt [GDTR]
 
@@ -59,13 +59,13 @@ section mbr vstart=0x7c00
     bts eax, 31
     mov cr0, eax
 
-    mov esp, 0xc00a0000
-
     or dword [GDTR + 2], 0xc0000000
     lgdt [GDTR]
 
+    mov esp, 0xc00a0000
+
     mov dx, 0x1f2
-    mov al, 99
+    mov al, 97
     out dx, al
 
     inc dx
@@ -87,65 +87,60 @@ section mbr vstart=0x7c00
     mov al, 0x20
     out dx, al
 
-.__waitDisk:
+.__waitHD:
 
     in al, dx
     and al, 0x88
     cmp al, 0x8
-    jne .__waitDisk
+    jne .__waitHD
 
     mov dx, 0x1f0
     mov edi, 0xc0080000
-    mov ecx, 99 * 512 / 2
+    mov ecx, 97 * 512 / 2
     rep insw
-
-    xor ecx, ecx
-    xor edx, edx
 
     mov ebx, [0xc008001c]
     add ebx, 0xc0080000
-    mov dx, [0xc008002a]
-    mov cx, [0xc008002c]
+    movzx edx, word [0xc008002a]
+    movzx ecx, word [0xc008002c]
 
-.__parseElf:
-
-    push ecx
+.__parseELF:
 
     cmp dword [ebx], 0x1
-    jne .__parseElfEnd
+    jne .__notLoad
 
     mov esi, [ebx + 0x4]
     add esi, 0xc0080000
     mov edi, [ebx + 0x8]
+    push ecx
     mov ecx, [ebx + 0x10]
     rep movsb
-
     xor al, al
     mov ecx, [ebx + 0x14]
     sub ecx, [ebx + 0x10]
     rep stosb
+    pop ecx
 
-.__parseElfEnd:
+.__notLoad:
 
     add ebx, edx
-
-    pop ecx
-    loop .__parseElf
+    loop .__parseELF
 
     jmp [0xc0080018]
 
+align 0x8
 GDT:
-    dq 0
+    dq 0x0
     dq 0x00cf98000000ffff
     dq 0x00cf92000000ffff
     dq 0x00cff8000000ffff
     dq 0x00cff2000000ffff
-    dq 0
+    dq 0x0
 
 GDTR:
     dw $ - GDT - 1
     dd GDT
 
-times 510 - ($ - $$) db 0
+times 510 - ($ - $$) db 0x0
 
 db 0x55, 0xaa

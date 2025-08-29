@@ -11,7 +11,7 @@ typedef struct Node
 
 typedef struct
 {
-    Node root;
+    Node __root;
 } Queue;
 
 

@@ -9,7 +9,7 @@ typedef struct
 } Bitmap;
 
 
-void bitmapInit(Bitmap *this, uint8_t *data, uint32_t size, bool zeroBool);
+void bitmapInit(Bitmap *this, uint8_t *data, uint32_t size);
 bool bitmapGet(Bitmap *this, uint32_t idx);
 void bitmapSet(Bitmap *this, uint32_t idx, bool val);
 uint32_t bitmapAllocate(Bitmap *this, uint32_t bitCount);

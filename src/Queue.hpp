@@ -5,7 +5,7 @@
 
 void queueInit(Queue *this)
 {
-    this->root.__prev = this->root.__next = &this->root;
+    this->__root.__prev = this->__root.__next = &this->__root;
 }
 
 
@@ -13,7 +13,7 @@ bool queueEmpty(Queue *this)
 {
     __asm__ __volatile__("pushf; cli");
 
-    bool emptyBool = this->root.__next == &this->root;
+    bool emptyBool = this->__root.__next == &this->__root;
 
     __asm__ __volatile__("popf");
 
@@ -25,11 +25,11 @@ void queuePush(Queue *this, Node *pushNode)
 {
     __asm__ __volatile__("pushf; cli");
 
-    pushNode->__prev = this->root.__prev;
-    pushNode->__next = &this->root;
+    pushNode->__prev = this->__root.__prev;
+    pushNode->__next = &this->__root;
 
-    this->root.__prev->__next = pushNode;
-    this->root.__prev = pushNode;
+    this->__root.__prev->__next = pushNode;
+    this->__root.__prev = pushNode;
 
     __asm__ __volatile__("popf");
 }
@@ -39,10 +39,10 @@ Node *queuePop(Queue *this)
 {
     __asm__ __volatile__("pushf; cli");
 
-    Node *popNode = this->root.__next;
+    Node *popNode = this->__root.__next;
 
-    popNode->__next->__prev = &this->root;
-    this->root.__next = popNode->__next;
+    popNode->__next->__prev = &this->__root;
+    this->__root.__next = popNode->__next;
 
     __asm__ __volatile__("popf");
 

@@ -26,7 +26,7 @@ void keyboardInit()
 }
 
 
-void keyboardDriver(uint32_t scanCode)
+void keyboardDriver(uint8_t scanCode)
 {
     if (scanCode == 0x2a || scanCode == 0xaa || scanCode == 0x36 || scanCode == 0xb6)
     {
@@ -51,17 +51,22 @@ void keyboardDriver(uint32_t scanCode)
 }
 
 
-void inputStr(char *resStr, uint32_t strLen)
+void inputStr(char *strBuf, uint32_t strSize)
 {
-    for (uint32_t idx = 0; idx < strLen - 1; )
+    if (!strSize)
+    {
+        return;
+    }
+
+    for (uint32_t idx = 0; idx < strSize - 1; )
     {
         char curChar = bufferPop(&__keyboardBuffer);
 
-        resStr[idx] = curChar;
+        strBuf[idx] = curChar;
 
         if (curChar == '\n')
         {
-            resStr[idx + 1] = 0;
+            strBuf[idx + 1] = 0;
             printChar(curChar);
             break;
         }
@@ -80,5 +85,5 @@ void inputStr(char *resStr, uint32_t strLen)
         }
     }
 
-    resStr[strLen - 1] = 0;
+    strBuf[strSize - 1] = 0;
 }

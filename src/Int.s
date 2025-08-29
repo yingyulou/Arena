@@ -1,16 +1,16 @@
 [bits 32]
 
-extern printStr
 extern printf
-extern keyboardDriver
-extern inputStr
-extern TSS
 extern curTask
 extern getNextTask
+extern TSS
+extern keyboardDriver
+extern printStr
+extern inputStr
 extern taskExit
 
-global __intList
 global __picInit
+global __intList
 global __taskSwitch
 
 %macro intTmpl 1
@@ -18,7 +18,7 @@ global __taskSwitch
 int%1:
 
     push %1
-    push __fmtStr
+    push __intFmtStr
     call printf
     add esp, 8
 
@@ -56,6 +56,68 @@ __picInit:
     pop eax
 
     ret
+
+intTimer:
+
+    push ds
+    push es
+    push fs
+    push gs
+    pusha
+
+    mov al, 0x20
+    out 0x20, al
+    out 0xa0, al
+
+    mov eax, [curTask]
+    mov [eax + 12], esp
+
+__taskSwitch:
+
+    call getNextTask
+
+    mov ebx, [eax + 8]
+    mov cr3, ebx
+
+    mov esp, [eax + 12]
+
+    lea ebx, [eax + 0x1000]
+    mov [TSS + 4], ebx
+
+    popa
+    pop gs
+    pop fs
+    pop es
+    pop ds
+
+    iret
+
+intKeyboard:
+
+    push eax
+
+    mov al, 0x20
+    out 0x20, al
+    out 0xa0, al
+
+    in al, 0x60
+    push eax
+    call keyboardDriver
+    add esp, 4
+
+    pop eax
+
+    iret
+
+intSyscall:
+
+    push edx
+    push ecx
+    push ebx
+    call [__syscallList + eax * 4]
+    add esp, 12
+
+    iret
 
 intTmpl 0x00
 intTmpl 0x01
@@ -105,69 +167,6 @@ intTmpl 0x2c
 intTmpl 0x2d
 intTmpl 0x2e
 intTmpl 0x2f
-
-intTimer:
-
-    push ds
-    push es
-    push fs
-    push gs
-    pusha
-
-    mov al, 0x20
-    out 0x20, al
-    out 0xa0, al
-
-    mov eax, [curTask]
-    mov [eax + 12], esp
-
-__taskSwitch:
-
-    call getNextTask
-
-    mov ebx, [eax + 8]
-    mov cr3, ebx
-
-    mov esp, [eax + 12]
-
-    add eax, 0x1000
-    mov [TSS + 4], eax
-
-    popa
-    pop gs
-    pop fs
-    pop es
-    pop ds
-
-    iret
-
-intKeyboard:
-
-    push eax
-
-    mov al, 0x20
-    out 0x20, al
-    out 0xa0, al
-
-    xor eax, eax
-    in al, 0x60
-    push eax
-    call keyboardDriver
-    add esp, 4
-
-    pop eax
-
-    iret
-
-intSyscall:
-
-    push edx
-    push ecx
-    push ebx
-    call [__syscallList + eax * 4]
-    add esp, 12
-
-    iret
 
 __intList:
     dd int0x00
@@ -225,5 +224,5 @@ __syscallList:
     dd inputStr
     dd taskExit
 
-__fmtStr:
-    db `Int: %d\n`, 0
+__intFmtStr:
+    db `Int: %d\n\0`
