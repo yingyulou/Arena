@@ -75,7 +75,7 @@ void installTaskPage(Bitmap *memBitmap, void *startPtr, uint32_t memSize)
         __installPage(startAddr + pageIdx * 0x1000, __allocateAddr(&__pBitmap, __P_START_ADDR, 1));
     }
 
-    memset(startPtr, 0x0, pageCount * 0x1000);
+    memset((void *)startAddr, 0x0, pageCount * 0x1000);
 }
 
 

@@ -8,6 +8,8 @@
 #include "Shell.h"
 #include "Util.h"
 
+#define __KERNEL_TASK_ADDR 0xc009f000
+
 uint8_t TSS[104];
 TCB *curTask = 0;
 Queue __taskQueue;
@@ -36,7 +38,7 @@ void __tssInit()
 
 void __kernelTaskInit()
 {
-    TCB *tcbPtr = (TCB *)0xc009f000;
+    TCB *tcbPtr = (TCB *)__KERNEL_TASK_ADDR;
 
     tcbPtr->__CR3       = 0x100000;
     tcbPtr->__taskState = TASK_READY;
@@ -181,9 +183,12 @@ void loadTaskPL3(uint32_t startSector, uint8_t sectorCount)
 
 TCB *getNextTask()
 {
-    queuePush(&__taskQueue, (Node *)curTask);
+    if ((uint32_t)curTask != __KERNEL_TASK_ADDR)
+    {
+        queuePush(&__taskQueue, (Node *)curTask);
+    }
 
-    for (;;)
+    for (uint32_t _ = 0, queueSize = queueGetSize(&__taskQueue); _ < queueSize; _++)
     {
         TCB *tcbPtr = (TCB *)queuePop(&__taskQueue);
 
@@ -191,7 +196,7 @@ TCB *getNextTask()
         {
             case TASK_READY:
                 curTask = tcbPtr;
-                return tcbPtr;
+                goto __findNextTask;
                 break;
 
             case TASK_EXIT:
@@ -208,6 +213,12 @@ TCB *getNextTask()
                 break;
         }
     }
+
+    curTask = (TCB *)__KERNEL_TASK_ADDR;
+
+    __findNextTask:
+
+    return curTask;
 }
 
 

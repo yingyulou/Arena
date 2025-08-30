@@ -1,4 +1,18 @@
-section Mbr vstart=0x7c00
+__BOOT_START_SEG  equ 0x9f00
+__BOOT_START_ADDR equ (__BOOT_START_SEG << 4)
+
+section Mbr
+
+    mov ax, __BOOT_START_SEG
+    mov es, ax
+    mov si, 0x7c00
+    xor di, di
+    mov cx, 256
+    rep movsw
+    mov ds, ax
+    jmp __BOOT_START_SEG:.__bootStart
+
+.__bootStart:
 
     lgdt [GDTR]
 
@@ -10,7 +24,7 @@ section Mbr vstart=0x7c00
     bts eax, 0
     mov cr0, eax
 
-    jmp (1 << 3):.__protectMode
+    jmp dword (1 << 3):.__protectMode + __BOOT_START_ADDR
 
 [bits 32]
 
@@ -59,8 +73,8 @@ section Mbr vstart=0x7c00
     bts eax, 31
     mov cr0, eax
 
-    or dword [GDTR + 2], 0xc0000000
-    lgdt [GDTR]
+    or dword [GDTR + __BOOT_START_ADDR + 2], 0xc0000000
+    lgdt [GDTR + __BOOT_START_ADDR]
 
     mov esp, 0xc00a0000
 
@@ -139,7 +153,7 @@ GDT:
 
 GDTR:
     dw $ - GDT - 1
-    dd GDT
+    dd GDT + __BOOT_START_ADDR
 
 times 510 - ($ - $$) db 0x0
 
