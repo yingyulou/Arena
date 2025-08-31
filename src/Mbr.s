@@ -149,7 +149,7 @@ GDT:
     dq 0x00cf92000000ffff
     dq 0x00cff8000000ffff
     dq 0x00cff2000000ffff
-    dq 0x0
+    dq 0xc0008909f01c0067
 
 GDTR:
     dw $ - GDT - 1

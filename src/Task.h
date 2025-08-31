@@ -15,10 +15,10 @@ typedef struct
     uint32_t __ESP0;
     uint32_t __taskState;
     Bitmap __vBitmap;
+    uint8_t __TSS[104];
 } TCB;
 
 
-extern uint8_t TSS[];
 extern TCB *curTask;
 
 void taskInit();

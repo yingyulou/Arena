@@ -10,40 +10,20 @@
 
 #define __KERNEL_TASK_ADDR 0xc009f000
 
-uint8_t TSS[104];
-TCB *curTask = 0;
+TCB *curTask = (TCB *)__KERNEL_TASK_ADDR;
 Queue __taskQueue;
-
-uint64_t __makeTSSDescriptor(uint64_t tssBase, uint64_t tssLimit, uint64_t tssAttr)
-{
-    return (tssLimit & 0xffff) | ((tssBase & 0xffffff) << 16) | (tssAttr << 32) |
-        ((tssLimit & 0xf0000) << 32) | ((tssBase & 0xff000000) << 32);
-}
-
-
-void __tssInit()
-{
-    *(uint16_t *)(TSS + 8)   = 2 << 3;
-    *(uint16_t *)(TSS + 102) = 103;
-
-    uint64_t GDTR;
-
-    __asm__ __volatile__("sgdt %0":: "m"(GDTR));
-
-    ((uint64_t *)(uint32_t)(GDTR >> 16))[5] = __makeTSSDescriptor((uint32_t)TSS, 103, 0x8900);
-
-    __asm__ __volatile__("ltr %w0":: "r"(5 << 3));
-}
-
 
 void __kernelTaskInit()
 {
-    TCB *tcbPtr = (TCB *)__KERNEL_TASK_ADDR;
+    curTask->__CR3       = 0x100000;
+    curTask->__taskState = TASK_READY;
 
-    tcbPtr->__CR3       = 0x100000;
-    tcbPtr->__taskState = TASK_READY;
+    memset(curTask->__TSS, 0x0, 104);
 
-    curTask = tcbPtr;
+    *(uint16_t *)(curTask->__TSS + 8)   = 2 << 3;
+    *(uint16_t *)(curTask->__TSS + 102) = 103;
+
+    __asm__ __volatile__("ltr %w0":: "r"(5 << 3));
 }
 
 
@@ -51,7 +31,6 @@ void taskInit()
 {
     queueInit(&__taskQueue);
 
-    __tssInit();
     __kernelTaskInit();
 }
 

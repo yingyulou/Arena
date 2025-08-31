@@ -82,7 +82,7 @@ __taskSwitch:
     mov esp, [eax + 12]
 
     lea ebx, [eax + 0x1000]
-    mov [TSS + 4], ebx
+    mov [0xc009f020], ebx
 
     popa
     pop gs
