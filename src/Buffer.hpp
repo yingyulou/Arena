@@ -34,7 +34,7 @@ void bufferPush(Buffer *this, char pushChar)
 
     if (this->__waitTask)
     {
-        this->__waitTask->__taskState = TASK_READY;
+        this->__waitTask->__taskState = __TASK_READY;
         this->__waitTask = 0;
     }
 }
@@ -44,7 +44,7 @@ char bufferPop(Buffer *this)
 {
     while (bufferEmpty(this))
     {
-        curTask->__taskState = TASK_BLOCK;
+        curTask->__taskState = __TASK_BLOCK;
         this->__waitTask = curTask;
 
         __asm__ __volatile__("int $0x20");

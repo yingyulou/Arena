@@ -37,7 +37,7 @@ void __parseCmd(char *cmdStr)
 
         fsLoad(getNextStr(&cmdStr));
 
-        shellTask->__taskState = TASK_BLOCK;
+        shellTask->__taskState = __TASK_BLOCK;
         __asm__ __volatile__("int $0x20");
     }
     else

@@ -1,16 +1,15 @@
-__BOOT_START_SEG  equ 0x9f00
-__BOOT_START_ADDR equ (__BOOT_START_SEG << 4)
+%include "Boot.inc"
 
 section Mbr
 
-    mov ax, __BOOT_START_SEG
+    mov ax, __BOOT_SEG
     mov es, ax
     mov si, 0x7c00
     xor di, di
     mov cx, 256
     rep movsw
     mov ds, ax
-    jmp __BOOT_START_SEG:.__bootStart
+    jmp __BOOT_SEG:.__bootStart
 
 .__bootStart:
 
@@ -24,7 +23,7 @@ section Mbr
     bts eax, 0
     mov cr0, eax
 
-    jmp dword (1 << 3):.__protectMode + __BOOT_START_ADDR
+    jmp dword (1 << 3):.__protectMode + __BOOT_ADDR
 
 [bits 32]
 
@@ -73,8 +72,8 @@ section Mbr
     bts eax, 31
     mov cr0, eax
 
-    or dword [GDTR + __BOOT_START_ADDR + 2], 0xc0000000
-    lgdt [GDTR + __BOOT_START_ADDR]
+    or dword [GDTR + __BOOT_ADDR + 2], 0xc0000000
+    lgdt [GDTR + __BOOT_ADDR]
 
     mov esp, 0xc00a0000
 
@@ -153,7 +152,7 @@ GDT:
 
 GDTR:
     dw $ - GDT - 1
-    dd GDT + __BOOT_START_ADDR
+    dd GDT + __BOOT_ADDR
 
 times 510 - ($ - $$) db 0x0
 

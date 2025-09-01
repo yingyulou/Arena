@@ -16,7 +16,7 @@ Queue __taskQueue;
 void __kernelTaskInit()
 {
     curTask->__CR3       = 0x100000;
-    curTask->__taskState = TASK_READY;
+    curTask->__taskState = __TASK_READY;
 
     memset(curTask->__TSS, 0x0, 104);
 
@@ -57,7 +57,7 @@ TCB *loadTaskPL0(void *EIP)
 
     tcbPtr->__CR3       = pCR3;
     tcbPtr->__ESP0      = (uint32_t)ESP0;
-    tcbPtr->__taskState = TASK_READY;
+    tcbPtr->__taskState = __TASK_READY;
     bitmapInit(&tcbPtr->__vBitmap, vBitmapBuf, 0x8000);
 
     memcpy((void *)(vCR3 + 0xc00), (void *)0xfffffc00, 255 * 4);
@@ -98,7 +98,7 @@ void loadTaskPL3(uint32_t startSector, uint8_t sectorCount)
 
     tcbPtr->__CR3       = pCR3;
     tcbPtr->__ESP0      = (uint32_t)ESP0;
-    tcbPtr->__taskState = TASK_READY;
+    tcbPtr->__taskState = __TASK_READY;
     bitmapInit(&tcbPtr->__vBitmap, vBitmapBuf, 0x8000);
 
     memcpy((void *)(vCR3 + 0xc00), (void *)0xfffffc00, 255 * 4);
@@ -169,21 +169,21 @@ TCB *getNextTask()
 
     for (uint32_t _ = 0, queueSize = queueGetSize(&__taskQueue); _ < queueSize; _++)
     {
-        TCB *tcbPtr = (TCB *)queuePop(&__taskQueue);
+        TCB *nextTask = (TCB *)queuePop(&__taskQueue);
 
-        switch (tcbPtr->__taskState)
+        switch (nextTask->__taskState)
         {
-            case TASK_READY:
-                curTask = tcbPtr;
+            case __TASK_READY:
+                curTask = nextTask;
                 goto __findNextTask;
                 break;
 
-            case TASK_EXIT:
-                deallocateKernelPage(tcbPtr, 3);
+            case __TASK_EXIT:
+                deallocateKernelPage(nextTask, 3);
                 break;
 
-            case TASK_BLOCK:
-                queuePush(&__taskQueue, (Node *)tcbPtr);
+            case __TASK_BLOCK:
+                queuePush(&__taskQueue, (Node *)nextTask);
                 break;
 
             default:
@@ -205,8 +205,8 @@ void taskExit()
 {
     deallocateTaskCR3();
 
-    curTask->__taskState   = TASK_EXIT;
-    shellTask->__taskState = TASK_READY;
+    curTask->__taskState   = __TASK_EXIT;
+    shellTask->__taskState = __TASK_READY;
 
     __asm__ __volatile__("jmp __taskSwitch");
 }

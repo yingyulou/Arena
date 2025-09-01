@@ -4,9 +4,9 @@
 #include "Queue.h"
 #include "Util.h"
 
-#define TASK_READY ((uint32_t)0x0)
-#define TASK_EXIT  ((uint32_t)0x1)
-#define TASK_BLOCK ((uint32_t)0x2)
+#define __TASK_READY ((uint32_t)0x0)
+#define __TASK_EXIT  ((uint32_t)0x1)
+#define __TASK_BLOCK ((uint32_t)0x2)
 
 typedef struct
 {
