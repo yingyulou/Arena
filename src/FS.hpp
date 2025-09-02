@@ -8,8 +8,8 @@
 #include "Util.h"
 
 #define __FS_SUPER_BLOCK  98
-#define __FS_BITMAP_BLOCK 99
-#define __FS_START_BLOCK  100
+#define __FS_BITMAP_BLOCK ((__FS_SUPER_BLOCK) + 1)
+#define __FS_START_BLOCK  ((__FS_BITMAP_BLOCK) + 1)
 #define __FS_MAGIC        0x66666666
 #define __FS_FCB_COUNT    15
 
@@ -74,7 +74,7 @@ void fsCreate(const char *fileName, uint32_t startSector, uint8_t sectorCount)
         return;
     }
 
-    strcpy(__fcbList[fcbIdx].__fileName, fileName, sizeof(__fcbList[fcbIdx].__fileName));
+    strcpy(__fcbList[fcbIdx].__fileName, fileName, sizeof(__fcbList[fcbIdx].__fileName) - 1);
     __fcbList[fcbIdx].__startSector = bitmapAllocate(&__hdBitmap, sectorCount) + __FS_START_BLOCK;
     __fcbList[fcbIdx].__sectorCount = sectorCount;
 

@@ -51,7 +51,7 @@ void strcpy(char *tarStr, const char *srcStr, uint32_t strSize)
 {
     uint32_t idx = 0;
 
-    for (; idx < strSize - 1; idx++)
+    for (; idx < strSize; idx++)
     {
         if (srcStr[idx])
         {

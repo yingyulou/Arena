@@ -41,14 +41,19 @@ void queuePush(Queue *this, Node *pushNode)
 
 Node *queuePop(Queue *this)
 {
+    Node *popNode = 0;
+
     __asm__ __volatile__("pushf; cli");
 
-    Node *popNode = this->__root.__next;
+    if (this->__size)
+    {
+        popNode = this->__root.__next;
 
-    popNode->__next->__prev = &this->__root;
-    this->__root.__next = popNode->__next;
+        popNode->__next->__prev = &this->__root;
+        this->__root.__next = popNode->__next;
 
-    this->__size--;
+        this->__size--;
+    }
 
     __asm__ __volatile__("popf");
 

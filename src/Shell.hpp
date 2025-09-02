@@ -47,7 +47,7 @@ void __parseCmd(char *cmdStr)
 }
 
 
-void shellMain()
+void arenaShell()
 {
     char cmdStr[128];
 
@@ -62,5 +62,5 @@ void shellMain()
 
 void shellInit()
 {
-    shellTask = loadTaskPL0(shellMain);
+    shellTask = loadTaskPL0(arenaShell);
 }

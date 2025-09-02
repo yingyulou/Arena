@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Bitmap.h"
-#include "Queue.h"
 #include "Util.h"
 
 #define __TASK_READY ((uint32_t)0x0)

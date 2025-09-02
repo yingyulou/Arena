@@ -120,9 +120,9 @@ void printf(const char *fmtStr, ...)
         {
             printChar(fmtStr[idx]);
         }
-        else if (fmtStr[++idx])
+        else if (fmtStr[idx + 1])
         {
-            switch (fmtStr[idx])
+            switch (fmtStr[++idx])
             {
                 case '%':
                     printChar('%');
