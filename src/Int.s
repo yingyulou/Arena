@@ -3,7 +3,6 @@
 extern printf
 extern curTask
 extern getNextTask
-extern TSS
 extern keyboardDriver
 extern printStr
 extern inputStr
@@ -82,7 +81,7 @@ __taskSwitch:
     mov esp, [eax + 12]
 
     lea ebx, [eax + 0x1000]
-    mov [0xc009f020], ebx
+    mov [0xc009f018], ebx
 
     popa
     pop gs
