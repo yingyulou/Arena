@@ -168,8 +168,7 @@ TCB *getNextTask()
         switch (nextTask->__taskState)
         {
             case __TASK_READY:
-                curTask = nextTask;
-                goto __findNextTask;
+                return curTask = nextTask;
                 break;
 
             case __TASK_EXIT:
@@ -187,11 +186,7 @@ TCB *getNextTask()
         }
     }
 
-    curTask = (TCB *)__KERNEL_TASK_ADDR;
-
-    __findNextTask:
-
-    return curTask;
+    return curTask = (TCB *)__KERNEL_TASK_ADDR;
 }
 
 
