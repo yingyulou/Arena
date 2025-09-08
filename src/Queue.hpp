@@ -13,20 +13,12 @@ void queueInit(Queue *this)
 
 uint32_t queueGetSize(Queue *this)
 {
-    __asm__ __volatile__("pushf; cli");
-
-    uint32_t queueSize = this->__size;
-
-    __asm__ __volatile__("popf");
-
-    return queueSize;
+    return this->__size;
 }
 
 
 void queuePush(Queue *this, Node *pushNode)
 {
-    __asm__ __volatile__("pushf; cli");
-
     pushNode->__prev = this->__root.__prev;
     pushNode->__next = &this->__root;
 
@@ -34,16 +26,12 @@ void queuePush(Queue *this, Node *pushNode)
     this->__root.__prev = pushNode;
 
     this->__size++;
-
-    __asm__ __volatile__("popf");
 }
 
 
 Node *queuePop(Queue *this)
 {
     Node *popNode = 0;
-
-    __asm__ __volatile__("pushf; cli");
 
     if (this->__size)
     {
@@ -54,8 +42,6 @@ Node *queuePop(Queue *this)
 
         this->__size--;
     }
-
-    __asm__ __volatile__("popf");
 
     return popNode;
 }
