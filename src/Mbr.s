@@ -122,10 +122,10 @@ section Mbr
     cmp dword [ebx], 0x1
     jne .__notLoad
 
+    push ecx
     mov esi, [ebx + 0x4]
     add esi, 0xc0080000
     mov edi, [ebx + 0x8]
-    push ecx
     mov ecx, [ebx + 0x10]
     rep movsb
     xor al, al
