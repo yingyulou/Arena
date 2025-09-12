@@ -25,13 +25,13 @@ void fsInit()
     {
         hdRead(__hdBitmapBuf, __FS_BITMAP_BLOCK, 1);
 
-        bitmapInit(&__hdBitmap, __hdBitmapBuf, 512 * 8);
+        bitmapInit(&__hdBitmap, __hdBitmapBuf);
     }
     else
     {
         memset(__fcbList, 0, 512);
         *(uint32_t *)(__fcbList + __FS_FCB_COUNT) = __FS_MAGIC;
-        bitmapInit(&__hdBitmap, __hdBitmapBuf, 512 * 8);
+        bitmapInit(&__hdBitmap, __hdBitmapBuf);
 
         hdWrite(__fcbList, __FS_SUPER_BLOCK, 1);
         hdWrite(__hdBitmapBuf, __FS_BITMAP_BLOCK, 1);

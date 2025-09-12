@@ -12,8 +12,8 @@ uint8_t __memBitmapBuf[0x2000];
 
 void memoryInit()
 {
-    bitmapInit(&__vBitmap, __memBitmapBuf, 0x8000);
-    bitmapInit(&__pBitmap, __memBitmapBuf + 0x1000, 0x8000);
+    bitmapInit(&__vBitmap, __memBitmapBuf);
+    bitmapInit(&__pBitmap, __memBitmapBuf + 0x1000);
 }
 
 
