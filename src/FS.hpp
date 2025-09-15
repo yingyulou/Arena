@@ -11,7 +11,7 @@
 #define __FS_BITMAP_BLOCK ((__FS_SUPER_BLOCK) + 1)
 #define __FS_START_BLOCK  ((__FS_BITMAP_BLOCK) + 1)
 #define __FS_MAGIC        0x66666666
-#define __FS_FCB_COUNT    15
+#define __FS_FCB_COUNT    (512 / sizeof(FCB) - 1)
 
 FCB __fcbList[__FS_FCB_COUNT + 1];
 uint8_t __hdBitmapBuf[512];
