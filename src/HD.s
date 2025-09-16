@@ -8,7 +8,7 @@ hdRead:
     push ebp
     mov ebp, esp
 
-    pusha
+    push edi
 
     mov dx, 0x1f2
     mov al, [ebp + 16]
@@ -48,7 +48,7 @@ hdRead:
     mov edi, [ebp + 8]
     rep insw
 
-    popa
+    pop edi
 
     leave
     ret
@@ -58,7 +58,7 @@ hdWrite:
     push ebp
     mov ebp, esp
 
-    pusha
+    push esi
 
     mov dx, 0x1f2
     mov al, [ebp + 16]
@@ -98,7 +98,7 @@ hdWrite:
     mov esi, [ebp + 8]
     rep outsw
 
-    popa
+    pop esi
 
     leave
     ret

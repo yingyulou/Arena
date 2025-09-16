@@ -13,7 +13,6 @@ global __intList
 global __taskSwitch
 
 %macro intTmpl 1
-
 int%1:
 
     push %1
@@ -22,13 +21,9 @@ int%1:
     add esp, 8
 
     hlt
-
 %endmacro
 
 __picInit:
-
-    push eax
-    push edx
 
     mov al, 0x11
     out 0x20, al
@@ -50,9 +45,6 @@ __picInit:
     out 0x21, al
     mov al, 0xff
     out 0xa1, al
-
-    pop edx
-    pop eax
 
     ret
 
@@ -93,7 +85,7 @@ __taskSwitch:
 
 intKeyboard:
 
-    push eax
+    pusha
 
     mov al, 0x20
     out 0x20, al
@@ -104,7 +96,7 @@ intKeyboard:
     call keyboardDriver
     add esp, 4
 
-    pop eax
+    popa
 
     iret
 
